@@ -20,7 +20,7 @@
                 
             var coords;
             if (event.pageX || event.pageY)
-                coords = {x: event.pageX, y; event.pageY};
+                coords = {x: event.pageX, y: event.pageY};
             else {
                 coords = {
                     x: ev.clientX + document.body.scrollLeft - document.body.clientLeft, 
@@ -60,11 +60,9 @@
             mouseDown: function(event) {
                 if (event.which != 1)   return;
                 var coords = utils.getMouseCoords(event);
+                $this.trigger(jQuery.Event('dragstart.tappy', coords));
                 
-                $.extend(event, coords);
-                $this.trigger(jQuery.Event('dragstart.tappy', event));
-                
-                $this.data{'tappy', {
+                $this.data('tappy', {
                     tapDownPos: coords,
                     tapDownTime: $.now(),
                     lastDragPos: coords,    // this starts dragging
@@ -74,9 +72,7 @@
             mouseUp: function(event) {
                 if (event.which != 1)   return;
                 var coords = utils.getMouseCoords(event);
-                
-                $.extend(event, coords);
-                $this.trigger(jQuery.Event('dragend.tappy', event));
+                $this.trigger(jQuery.Event('dragend.tappy', coords));
                 
                 // detect clicks/taps
                 var data = $this.data('tappy');
@@ -87,7 +83,7 @@
                     // decide between single and double tap
                     if (!data.singleTapTimer) {
                         var tapTrigger = function() {
-                            $this.trigger(jQuery.Event('tap.tappy', coords);
+                            $this.trigger(jQuery.Event('tap.tappy', coords));
                             data.singleTapTimer = null;
                         };
                         data.singleTapTimer = setTimeout(tapTrigger, options.tapConfirmTime);
@@ -105,22 +101,20 @@
             
             mouseMove: function(event) {
                 var coords = utils.getMouseCoords(event);
-                $.extend(event, coords);
-                $this.trigger(jQuery.Event('move.tappy', event));
+                $this.trigger(jQuery.Event('move.tappy', coords));
                 
                 // if drag is in progress, update last drag position
                 var data = $this.data('tappy');
                 if (data.lastDragPos) {
                     var dx = coords.x - data.lastDragPos.x, dy = coords.y - data.lastDragPos.y;
-                    $.extend(event, {dx: dx, dy; dy});
-                    $this.trigger(jQuery.Event('drag.tappy', event));
+                    $this.trigger(jQuery.Event('drag.tappy', {dx: dx, dy: dy}));
                 }
             },
         };
         
-        domElem.bind('mousedown', eventHandlers.mouseDown);
-        domElem.bind('mouseup', eventHandlers.mouseUp);
-        domElem.bind('mousemove', eventHandlers.mouseMove);
+        $this.bind('mousedown', eventHandlers.mouseDown);
+        $this.bind('mouseup', eventHandlers.mouseUp);
+        $this.bind('mousemove', eventHandlers.mouseMove);
     };
 
 })(jQuery);

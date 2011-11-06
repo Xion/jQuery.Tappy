@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="../jquery.tappy.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("canvas").tappy();
+            $("canvas").bind('tap.tappy', function(event) { circle(this, event.x, event.y, 24, 'green'); });
+            $("canvas").bind('doubletap.tappy', function(event) { circle(this, event.x, event.y, 32, 'purple'); });
+        });
+
+        function circle(canvas, x, y, radius, fillStyle) {
+            var ctx = canvas.getContext('2d');
+            ctx.fillStyle = fillStyle;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, 2*Math.PI, true);
+            ctx.closePath();
+            ctx.fill();
+        }
+    </script>
+</head>
+<body>
+    <canvas width="960" height="600" style="border: 1px solid black"></canvas>
+</body>
+</html>
