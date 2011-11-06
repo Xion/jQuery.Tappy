@@ -51,9 +51,8 @@
         
         // initialize options
         var options = {
-            tapDistance: 10,        // pixels
-            tapTime: 100,           // milliseconds
-            tapConfirmTime: 200,    // milliseconds (time between first and second tap to count as doubletap)
+            tapDistance: 16,        // pixels
+            tapInterval: 250,       // milliseconds
         };
         $.extend(options, opts);
         
@@ -83,7 +82,7 @@
                 // detect clicks/taps
                 var data = $this.data('tappy');
                 var withinTapDistance = utils.distSq(data.tapDownPos, coords) < options.tapDistance * options.tapDistance;
-                var withinTapTime = $.now() - data.tapDownTime <= options.tapTime;
+                var withinTapTime = $.now() - data.tapDownTime <= options.tapInterval;
                 if (withinTapDistance && withinTapTime) {
                     
                     // decide between single and double tap
@@ -92,7 +91,7 @@
                             $this.trigger(jQuery.Event('tap.tappy', coords));
                             utils.updateDomData($this, 'tappy', {singleTapTimer: null});
                         };
-                        var tapTimer = setTimeout(tapTrigger, options.tapConfirmTime);
+                        var tapTimer = setTimeout(tapTrigger, options.tapInterval);
                         utils.updateDomData($this, 'tappy', {singleTapTimer: tapTimer});
                     }
                     else {

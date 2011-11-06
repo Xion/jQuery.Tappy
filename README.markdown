@@ -31,3 +31,12 @@ relative to top-left corner of the <code>tappy()</code>'d DOM element.
 * <code>drag</code> - Drag event. Besides <code>x</code> and <code>y</code> coordinates, event object contains
                       <code>dx</code> and <code>dy</code> values that are equal to movement of the pointer since
                       the last <code>drag</code> event.
+
+
+Options
+-
+<code>tappy()</code> accepts a non-mandatory argument: an object with options overriding plugin's default settings.
+These options are the following:
+
+* <code>tapDistance</code> - Maximum distance (in pixels) between two subsequent taps/clicks that are to be counted as <code>doubletap</code>.
+* <code>tapInterval</code> - Maximum time interval (in milliseconds) between two subsequent taps/clicks that are to be counted as <code>doubletap</code>.
