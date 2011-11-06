@@ -1,7 +1,7 @@
 # jQuery.Tappy
 
 _jQuery.Tappy_ is a small plugin that aims to provide support for basic pointer-based gestures (such as single and double clicks/taps,
-and dragging) to DOM elements that don't support them - or support poorly. The prime use is probably for the <code><canvas></code> element.
+and dragging) to DOM elements that don't support them - or support poorly. The prime use is probably for the <code>\<canvas\></code> element.
 
 Usage
 -
