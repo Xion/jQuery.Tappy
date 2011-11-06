@@ -123,6 +123,8 @@
         $this.bind('mousedown', eventHandlers.mouseDown);
         $this.bind('mouseup', eventHandlers.mouseUp);
         $this.bind('mousemove', eventHandlers.mouseMove);
+        
+        return $this;
     };
 
 })(jQuery);
