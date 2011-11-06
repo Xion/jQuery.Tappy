@@ -38,6 +38,12 @@
             return dx * dx + dy * dy;
         },
         
+        updateDomData: function($elem, key, data) {
+            var domData = $elem.data(key);
+            $.extend(domData, data);
+            $elem.data(key, domData);
+        },
+        
     };
     
     
@@ -62,7 +68,7 @@
                 var coords = utils.getMouseCoords(event);
                 $this.trigger(jQuery.Event('dragstart.tappy', coords));
                 
-                $this.data('tappy', {
+                utils.updateDomData($this, 'tappy', {
                     tapDownPos: coords,
                     tapDownTime: $.now(),
                     lastDragPos: coords,    // this starts dragging
@@ -84,13 +90,14 @@
                     if (!data.singleTapTimer) {
                         var tapTrigger = function() {
                             $this.trigger(jQuery.Event('tap.tappy', coords));
-                            data.singleTapTimer = null;
+                            utils.updateDomData($this, 'tappy', {singleTapTimer: null});
                         };
-                        data.singleTapTimer = setTimeout(tapTrigger, options.tapConfirmTime);
+                        var tapTimer = setTimeout(tapTrigger, options.tapConfirmTime);
+                        utils.updateDomData($this, 'tappy', {singleTapTimer: tapTimer});
                     }
                     else {
                         clearTimeout(data.singleTapTimer);
-                        data.singleTapTimer = null;
+                        utils.updateDomData($this, 'tappy', {singleTapTimer: null});
                         
                         // this is second tap happening within tap confirmation time:
                         // we should register it as double-tap
@@ -108,6 +115,7 @@
                 if (data.lastDragPos) {
                     var dx = coords.x - data.lastDragPos.x, dy = coords.y - data.lastDragPos.y;
                     $this.trigger(jQuery.Event('drag.tappy', {dx: dx, dy: dy}));
+                    utils.updateDomData($this, 'tappy', {lastDragPos: coords});
                 }
             },
         };
