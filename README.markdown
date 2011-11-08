@@ -38,5 +38,7 @@ Options
 <code>tappy()</code> accepts a non-mandatory argument: an object with options overriding plugin's default settings.
 These options are the following:
 
+* <code>doubleTapEnabled</code> - Whether double taps are detected and dispatches as events (they are by default).
+                                  If <code>false</code>, values <code>tapDistance</code> and <code>tapInterval</code> are ignored.
 * <code>tapDistance</code> - Maximum distance (in pixels) between two subsequent taps/clicks that are to be counted as <code>doubletap</code>.
 * <code>tapInterval</code> - Maximum time interval (in milliseconds) between two subsequent taps/clicks that are to be counted as <code>doubletap</code>.

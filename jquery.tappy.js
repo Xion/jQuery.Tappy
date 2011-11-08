@@ -51,6 +51,7 @@
         
         // initialize options
         var options = {
+            doubleTapEnabled: true,
             tapDistance: 16,        // pixels
             tapInterval: 250,       // milliseconds
         };
@@ -85,7 +86,12 @@
                 mouseDown: function(event) {
                     if (event.which != 1)   return;
                     
-                    if (isTapPending()) confirmPendingTap();
+                    // confirm any previously pending  tap if double taps are disabled
+                    if (!options.doubleTapEnabled) {
+                        var data = $this.data('tappy');
+                        if (isTapPending(data))
+                            confirmPendingTap(data);
+                    }
                     
                     var coords = utils.getMouseCoords(event);
                     $this.trigger(jQuery.Event('dragstart.tappy', coords));
