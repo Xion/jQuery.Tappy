@@ -55,6 +55,7 @@
             tapInterval: 250,       // milliseconds
         };
         $.extend(options, opts);
+        var tapDistanceSq = options.tapDistance * options.tapDistance;  // precomputing for speed
         
         var $this = this;
         $this.data('tappy', {lastDragPos: null});
@@ -77,11 +78,13 @@
             mouseUp: function(event) {
                 if (event.which != 1)   return;
                 var coords = utils.getMouseCoords(event);
+                
                 $this.trigger(jQuery.Event('dragend.tappy', coords));
+                utils.updateDomData($this, 'tappy', {tapUpPos: coords});
                 
                 // detect clicks/taps
                 var data = $this.data('tappy');
-                var withinTapDistance = utils.distSq(data.tapDownPos, coords) < options.tapDistance * options.tapDistance;
+                var withinTapDistance = utils.distSq(data.tapDownPos, coords) < tapDistanceSq;
                 var withinTapTime = $.now() - data.tapDownTime <= options.tapInterval;
                 if (withinTapDistance && withinTapTime) {
                     
@@ -109,12 +112,21 @@
                 var coords = utils.getMouseCoords(event);
                 $this.trigger(jQuery.Event('move.tappy', coords));
                 
-                // if drag is in progress, update last drag position
                 var data = $this.data('tappy');
+                
+                // if drag is in progress, update last drag position
                 if (data.lastDragPos) {
                     var dx = coords.x - data.lastDragPos.x, dy = coords.y - data.lastDragPos.y;
-                    $this.trigger(jQuery.Event('drag.tappy', {dx: dx, dy: dy}));
                     utils.updateDomData($this, 'tappy', {lastDragPos: coords});
+                    $this.trigger(jQuery.Event('drag.tappy', {dx: dx, dy: dy}));
+                }
+                
+                // if pointer has moved sufficiently far, confirm pending tap
+                var tapIsPending = data.tapUpPos && data.singleTapTimer;
+                if (tapIsPending && utils.distSq(data.tapUpPos, coords) >= tapDistanceSq) {
+                    clearTimeout(data.singleTapTimer);
+                    utils.updateDomData($this, 'tappy', {singleTapTimer: null});
+                    $this.trigger(jQuery.Event('tap.tappy', data.tapUpPos));    // tap was on saved position, not coords!
                 }
             },
         };
