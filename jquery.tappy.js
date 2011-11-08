@@ -61,75 +61,95 @@
         $this.data('tappy', {lastDragPos: null});
 
         
-        var eventHandlers = {
+        var eventHandlers = (function() {
         
-            mouseDown: function(event) {
-                if (event.which != 1)   return;
-                var coords = utils.getMouseCoords(event);
-                $this.trigger(jQuery.Event('dragstart.tappy', coords));
-                
-                utils.updateDomData($this, 'tappy', {
-                    tapDownPos: coords,
-                    tapDownTime: $.now(),
-                    lastDragPos: coords,    // this starts dragging
-                });
-            },
+            var isTapPending = function(data) {
+                // checks whether there is a single tap pending confirmation
+                data = data || $this.data('tappy');
+                return data.tapUpPos && data.singleTapTimer;
+            };
             
-            mouseUp: function(event) {
-                if (event.which != 1)   return;
-                var coords = utils.getMouseCoords(event);
+            var confirmPendingTap = function(data) {
+                // confirms a pending single tap;
+                // it should be invoked only when it's clear that
+                // the single tap won't be followed by another one that would make it a double tap
+                data = data || $this.data('tappy');
                 
-                $this.trigger(jQuery.Event('dragend.tappy', coords));
-                utils.updateDomData($this, 'tappy', {tapUpPos: coords});
-                
-                // detect clicks/taps
-                var data = $this.data('tappy');
-                var withinTapDistance = utils.distSq(data.tapDownPos, coords) < tapDistanceSq;
-                var withinTapTime = $.now() - data.tapDownTime <= options.tapInterval;
-                if (withinTapDistance && withinTapTime) {
+                clearTimeout(data.singleTapTimer);
+                utils.updateDomData($this, 'tappy', {singleTapTimer: null});
+                $this.trigger(jQuery.Event('tap.tappy', data.tapUpPos));
+            };
+        
+            return {
+            
+                mouseDown: function(event) {
+                    if (event.which != 1)   return;
                     
-                    // decide between single and double tap
-                    if (!data.singleTapTimer) {
-                        var tapTrigger = function() {
-                            $this.trigger(jQuery.Event('tap.tappy', coords));
-                            utils.updateDomData($this, 'tappy', {singleTapTimer: null});
-                        };
-                        var tapTimer = setTimeout(tapTrigger, options.tapInterval);
-                        utils.updateDomData($this, 'tappy', {singleTapTimer: tapTimer});
-                    }
-                    else {
-                        clearTimeout(data.singleTapTimer);
-                        utils.updateDomData($this, 'tappy', {singleTapTimer: null});
+                    if (isTapPending()) confirmPendingTap();
+                    
+                    var coords = utils.getMouseCoords(event);
+                    $this.trigger(jQuery.Event('dragstart.tappy', coords));
+                    
+                    utils.updateDomData($this, 'tappy', {
+                        tapDownPos: coords,
+                        tapDownTime: $.now(),
+                        lastDragPos: coords,    // this starts dragging
+                    });
+                },
+                
+                mouseUp: function(event) {
+                    if (event.which != 1)   return;
+                    var coords = utils.getMouseCoords(event);
+                    
+                    $this.trigger(jQuery.Event('dragend.tappy', coords));
+                    utils.updateDomData($this, 'tappy', {tapUpPos: coords});
+                    
+                    // detect clicks/taps
+                    var data = $this.data('tappy');
+                    var withinTapDistance = utils.distSq(data.tapDownPos, coords) < tapDistanceSq;
+                    var withinTapTime = $.now() - data.tapDownTime <= options.tapInterval;
+                    if (withinTapDistance && withinTapTime) {
                         
-                        // this is second tap happening within tap confirmation time:
-                        // we should register it as double-tap
-                        $this.trigger(jQuery.Event('doubletap.tappy', coords));
+                        // decide between single and double tap
+                        if (!data.singleTapTimer) {
+                            var tapTrigger = function() {
+                                $this.trigger(jQuery.Event('tap.tappy', coords));
+                                utils.updateDomData($this, 'tappy', {singleTapTimer: null});
+                            };
+                            var tapTimer = setTimeout(tapTrigger, options.tapInterval);
+                            utils.updateDomData($this, 'tappy', {singleTapTimer: tapTimer});
+                        }
+                        else {
+                            clearTimeout(data.singleTapTimer);
+                            utils.updateDomData($this, 'tappy', {singleTapTimer: null});
+                            
+                            // this is second tap happening within tap confirmation time:
+                            // we should register it as double-tap
+                            $this.trigger(jQuery.Event('doubletap.tappy', coords));
+                        }
                     }
-                }
-            },
-            
-            mouseMove: function(event) {
-                var coords = utils.getMouseCoords(event);
-                $this.trigger(jQuery.Event('move.tappy', coords));
+                },
                 
-                var data = $this.data('tappy');
-                
-                // if drag is in progress, update last drag position
-                if (data.lastDragPos) {
-                    var dx = coords.x - data.lastDragPos.x, dy = coords.y - data.lastDragPos.y;
-                    utils.updateDomData($this, 'tappy', {lastDragPos: coords});
-                    $this.trigger(jQuery.Event('drag.tappy', {dx: dx, dy: dy}));
-                }
-                
-                // if pointer has moved sufficiently far, confirm pending tap
-                var tapIsPending = data.tapUpPos && data.singleTapTimer;
-                if (tapIsPending && utils.distSq(data.tapUpPos, coords) >= tapDistanceSq) {
-                    clearTimeout(data.singleTapTimer);
-                    utils.updateDomData($this, 'tappy', {singleTapTimer: null});
-                    $this.trigger(jQuery.Event('tap.tappy', data.tapUpPos));    // tap was on saved position, not coords!
-                }
-            },
-        };
+                mouseMove: function(event) {
+                    var coords = utils.getMouseCoords(event);
+                    $this.trigger(jQuery.Event('move.tappy', coords));
+                    
+                    var data = $this.data('tappy');
+                    
+                    // if drag is in progress, update last drag position
+                    if (data.lastDragPos) {
+                        var dx = coords.x - data.lastDragPos.x, dy = coords.y - data.lastDragPos.y;
+                        utils.updateDomData($this, 'tappy', {lastDragPos: coords});
+                        $this.trigger(jQuery.Event('drag.tappy', {dx: dx, dy: dy}));
+                    }
+                    
+                    // if pointer has moved sufficiently far, confirm pending tap
+                    if (isTapPending(data) && utils.distSq(data.tapUpPos, coords) >= tapDistanceSq) {
+                        confirmPendingTap(data);
+                    }
+                },
+            };
+        })();
         
         $this.bind('mousedown', eventHandlers.mouseDown);
         $this.bind('mouseup', eventHandlers.mouseUp);
